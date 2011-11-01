@@ -10,8 +10,10 @@ package
 			
 			trace("////");
 			const grid : Grid = new Grid(5,5);
-				grid.fill();
-				grid.dump();
+			grid.iterator.forEach(function(value:*,index:uint,grid:Grid):void{
+				grid.add(index,index);
+			})
+			grid.dump();
 				
 			//trace("---------------------------");
 			//trace("last index:"+grid.iterator.last());
