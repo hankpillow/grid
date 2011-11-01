@@ -1,29 +1,42 @@
 /**
- * @author igor almeida.
- * @version 1.3
- * */
+* @author igor almeida.
+* @version 1.4
+*
+*	CHANGE LOG 1.4 (01.11.2011):
+* --------------------------------------
+*	+ forEach
+*
+* */
 package redneck.grid
 {
 	public class GridIterator
 	{
 
-		private var grid : Grid;
-		private var index : int = 0;
+		private var grid : Grid
+		private var index : int = 0
+		private var _pointer : Pointer;
 
 		public function GridIterator( p_grid : Grid ):void{
 			grid = p_grid;
 		}
+		
+		public function set pointer( value : Pointer ) : void
+		{
+			_pointer = value;
+		}
+		
 		/**
 		* @return Pointer
 		**/
 		public function get pointer():Pointer
 		{
-			return grid.indexToPointer( index );
+			return _pointer = grid.indexToPointer( index );
 		}
 		/**
 		* Return the grid content's by <code>pointer</code>
 		* 
 		* @see Grid.get
+		* 
 		* @return *
 		* */
 		public function get content():*
@@ -31,39 +44,44 @@ package redneck.grid
 			return grid.get( index );
 		}
 		/**
-		* Reset index to 0
+		* Reset pointer
 		* 
-		* @see first.
-		* @return int
+		* @return GridIterator
 		* */
-		public function reset():int
+		public function reset():GridIterator
 		{
-			index = 0;
-			return index;
+			index = 0
+			return this
 		}
 		/**
-		* Goes to the first index
+		* Run through every cell
 		* 
-		* @return int
-		**/
-		public function first():int{
-			index = 0;
-			return index;
-		}
-		/**
-		* Goes to the last index
+		* @param func	Function	the given function must implement 3 arguments: value,index,grid
 		* 
-		* @return int
+		* @usage
+		* grid.iterator.forEach( function(value:*,index:uint,grid:Grid):void{
+		*		grid.add(index,index);
+		* } );
+		* grid.dump();
+		* 
+		* @return GridIterator
 		**/
-		public function last():int{
-			index = grid.size-1;
-			return index;
+		public function forEach(func:Function):GridIterator
+		{
+			if (func!=null){
+				const length : uint = grid.size;
+				var i : uint
+				while( i<length ){
+					func.apply(null,[grid.get(i),i,grid]);
+					i++
+				}
+			}
+			return this;
 		}
 		/**
-		* Goes to the next index.
-		* If the next index doesnt exist, it will stay where it is.
 		* 
 		* @param	loop	Boolean
+		* 
 		* @return *
 		* */
 		public function next( loop:Boolean = false):int
@@ -74,15 +92,9 @@ package redneck.grid
 				index = grid.pointerToIndex(p);
 				return index;
 			}
-			else if( hasNext() ){
-				return ++index
-			}
-			return index;
+			return index++
 		}
 		/**
-		* Goes to the previews index.
-		* If the next index doesnt exist, it will stay where it is.
-		* 
 		* @param	loop	Boolean
 		* @return *
 		* */
@@ -94,109 +106,110 @@ package redneck.grid
 				index = grid.pointerToIndex(p);
 				return index;
 			}
-			else if( hasPrev() ){
-				return --index;
-			}
-			return index;
+			return index--;
 		}
 		/**
-		* Goes in the same column, um row down.
-		* 
-		* @param	loop	Boolean
-		* @return int
-		* */
-		public function up( loop:Boolean = false ) : int
-		{
-			var p : Pointer = pointer;
-			if (p){
-				if (p.r==0 && index>0){
-					p.c--;
-					p.r = grid.height-1;
-				}
-				else{
-					p.r--;
-				}
-				const value : int = grid.pointerToIndex(p);
-				if (grid.hasIndex(value)){
-					index = value;
-				}
-			}
-			return index;
-		}
-		/**
-		* Moves the pointer one row down.
-		* 
 		* @param	loop	Boolean
 		* @return *
 		* */
-		public function down( loop:Boolean = false ):int
+		public function up( loop:Boolean = false ) : *
 		{
-			var p : Pointer = pointer;
+			var result:int = index
+			var p : Pointer = pointer
+			if (p){
+				if (p.r==0 && index>0){
+					p.c--
+					p.r = grid.height-1;
+				}else{
+					p.r--
+				}
+				index = grid.pointerToIndex(p);
+			}
+			return result
+		}
+		/**
+		* @param	loop	Boolean
+		* @return *
+		* */
+		public function down( loop:Boolean = false ):*
+		{
+			var result:int = index
+			var p : Pointer = pointer
 			if (p){
 				if (p.r>=grid.height-1 && index<grid.size-1){
-					p.c++;
+					p.c++
 					p.r = 0;
+				}else{
+					p.r++
 				}
-				else{
-					p.r++;
-				}
-				const value : int = grid.pointerToIndex(p);
-				if (grid.hasIndex(value)){
-					index = value;
-				}
+				index = grid.pointerToIndex(p);
 			}
-			return index;
+			return result
 		}
 		/**
-		* Check if increasing 1 in the current index will result a valid index.
+		* @private
+		* hasNext, hasPrev etc. doesn't matter which name you give, reading about iterator pattern
+		* i just realize that hasNext doesn't check if the current index + 1 is valid, it just check
+		* if the current index exists because every action to increase/decrease happens when next(), prev() etc are called.
 		* 
-		* @param	p_pointer	Pointer
 		* @return Boolean
-		* */
+		**/
+		private function has(p_pointer:Pointer = null):Boolean{
+			return grid.hasIndex( p_pointer? grid.pointerToIndex(p_pointer) : index );
+		}
+		/**
+		 * @param	p_pointer	Pointer
+		 * 
+		 * @return Boolean
+		 * */
 		public function hasNext( p_pointer: Pointer = null ) : Boolean
 		{
-			return grid.hasIndex( p_pointer? grid.pointerToIndex(p_pointer)+1 : (index+1) );
+			return has(p_pointer);
 		}
 		/**
-		* Check if decreasing 1 in the current index will result a valid index.
-		* 
 		* @param	p_pointer	Pointer
+		* 
 		* @return Boolean
 		* */
 		public function hasPrev( p_pointer: Pointer = null ):Boolean
 		{
-			return grid.hasIndex( p_pointer? grid.pointerToIndex(p_pointer)-1 : (index-1) );
+			return has(p_pointer)
 		}
 		/**
-		* Check if decreasing <code>grid.width</code> will result a valid index
-		* 
 		* @param	p_pointer	Pointer
+		* 
 		* @return Boolean
 		* */
 		public function hasUp( p_pointer: Pointer = null ) : Boolean
 		{
-			var check_pointer : Pointer = p_pointer;
-			if (check_pointer==null){
-				check_pointer = pointer.clone();
-				check_pointer.r--;
-			}
-			return grid.hasIndex( grid.pointerToIndex(check_pointer) );
+			return has(p_pointer);
 		}
 		/**
-		* Check if increasing <code>grid.width</code> will result a valid index
-		* 
 		* @param	p_pointer	Pointer
+		* 
 		* @return Boolean
 		* */
 		public function hasDown( p_pointer: Pointer = null ) : Boolean
 		{
-			var check_pointer : Pointer = p_pointer;
-			if (check_pointer==null){
-				check_pointer = pointer.clone();
-				check_pointer.r++;
-			}
-			return grid.hasIndex( grid.pointerToIndex(check_pointer) );
-			
+			return has(p_pointer);
+		}
+		/**
+		* goes to the first position
+		* 
+		* @return int
+		**/
+		public function first():int{
+			index = 0;
+			return index;
+		}
+		/**
+		* goes to the last position
+		* 
+		* @return int
+		**/
+		public function last():int{
+			index = grid.size-1
+			return index
 		}
 	}
 }
