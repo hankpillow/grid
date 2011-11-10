@@ -266,12 +266,14 @@ package redneck.grid
 		* Adds <code>value</code> into <code>index</code>
 		* 
 		* @see hasIndex
-		* 
 		* @see fill
+		* 
+		* @param value	*
+		* @param index	uint
 		* 
 		* @return Boolean
 		**/
-		public function add( index : int, value : *) : Boolean
+		public function add( value:* , index:int ) : Boolean
 		{
 			if ( hasIndex(index) ){
 				_matrix[ index ] = value;

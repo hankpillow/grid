@@ -11,7 +11,7 @@ package
 			trace("////");
 			const grid : Grid = new Grid(5,5);
 			grid.iterator.forEach(function(value:*,index:uint,grid:Grid):void{
-				grid.add(index,index);
+				grid.add("index_"+index,index);
 			})
 			grid.dump();
 				
